@@ -915,11 +915,14 @@ FixedWingModeManager::control_auto_loiter(const float control_interval, const Ve
 	const bool close_to_circle = vehicle_to_loiter_center.norm() < loiter_radius + _directional_guidance.switchDistance(500);
 
 	// Smoothly ramp the altitude setpoint from the current altitude such that the loiter altitude is reached
-	// by the time the vehicle arrives at the loiter circle.
+	// by the time the vehicle arrives at the loiter circle. Only ramp if not already close to circle.
 	const float acc_rad = math::max(_directional_guidance.switchDistance(500.0f), loiter_radius);
-	_foh_altitude_active = true;
-	const float position_sp_alt = calculateFirstOrderHoldAltitude(pos_sp_curr.lat, pos_sp_curr.lon, pos_sp_curr.alt,
-				      _current_latitude, _current_longitude, _current_altitude, acc_rad, _foh_altitude_state);
+	_foh_altitude_active = !close_to_circle;
+	const float position_sp_alt = close_to_circle
+				      ? pos_sp_curr.alt
+				      : calculateFirstOrderHoldAltitude(pos_sp_curr.lat, pos_sp_curr.lon, pos_sp_curr.alt,
+						      _current_latitude, _current_longitude, _current_altitude,
+						      acc_rad, _foh_altitude_state);
 
 	bool enforce_low_height{false};
 
